@@ -11,7 +11,7 @@ def walk_file(filename, dictionary):
     with open(filename, 'r', encoding='utf-8') as file:
         prepared_words = set()
         for line in file:
-            for word in re.findall(r'([a-zA-z]+)', line):
+            for word in re.findall(r"[\W_]*([a-zA-z']+)[\W_]*", line):
                 if word:
                     word = word.lower()
                     singular_word = inflect_engine.singular_noun(word)
