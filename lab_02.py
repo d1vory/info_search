@@ -53,14 +53,77 @@ class DictionaryBuilder:
                 return mid
         return -1
 
-
+    @classmethod
     def boolean_search_by_incidence_matrix(self, query):
-        and_separ = 'AND'
-        or_separ = 'OR'
-        not_separ = 'NOT'
-        separators = [and_separ, or_separ, not_separ]
-        operators = {
-            and_separ
-        }
+        res = None
+        method = None
+        negate = False
         for word in query.split(' '):
-            pass
+            token = QueryToken(word)
+            if method:
+                if negate:
+                    token = ~token
+                    negate =False
+                res = method(token)
+                method = None
+                continue
+            separator = token.get_separator
+            if separator:
+                if token.is_negate:
+                    negate = True
+                    continue
+                method = getattr(res, separator)
+            else:
+                if not res:
+                    res = token
+                else:
+                    res = res + token
+        return res
+
+class QueryToken:
+    and_separ = 'AND'
+    or_separ = 'OR'
+    not_separ = 'NOT'
+    separators = {
+        'AND': '__and__',
+        'OR': '__or__',
+        'NOT': '__invert__'
+    }
+
+    def __init__(self, word):
+        self.word = word
+
+    def __str__(self):
+        return self.word
+
+    def __repr__(self):
+        return self.word
+
+    @property
+    def get_separator(self):
+        return self.separators.get(self.word, False)
+
+    @property
+    def is_negate(self):
+        return self.word == self.not_separ
+
+    def __add__(self, other):
+        return QueryToken(f'{self.word} {other.word}')
+
+    def __or__(self, other):
+        kek = f'{self.word} or {other.word}'
+        print(kek)
+        return QueryToken(kek)
+
+    def __and__(self, other):
+        kek = f'{self.word} and {other.word}'
+        print(kek)
+        return QueryToken(kek)
+
+    def __invert__(self):
+        kek = f'not {self.word[::-1]}'
+        print(kek)
+        return QueryToken(kek)
+
+
+
