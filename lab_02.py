@@ -60,20 +60,24 @@ class DictionaryBuilder:
         negate = False
         for word in query.split(' '):
             token = QueryToken(word)
-            if method:
+            separator = token.get_separator
+            if separator:
+                if token.is_negate:
+                    negate = True
+                else:
+                    method = getattr(res, separator)
+                continue
+            if method and not token.is_negate:
                 if negate:
                     token = ~token
                     negate =False
                 res = method(token)
                 method = None
                 continue
-            separator = token.get_separator
-            if separator:
-                if token.is_negate:
-                    negate = True
-                    continue
-                method = getattr(res, separator)
-            else:
+            if not method:
+                if negate:
+                    token = ~token
+                    negate = False
                 if not res:
                     res = token
                 else:
@@ -121,8 +125,7 @@ class QueryToken:
         return QueryToken(kek)
 
     def __invert__(self):
-        kek = f'not {self.word[::-1]}'
-        print(kek)
+        kek = f'not_{self.word[::-1]}'
         return QueryToken(kek)
 
 
