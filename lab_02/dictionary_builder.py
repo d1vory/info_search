@@ -1,9 +1,9 @@
+import functools
 import os
 
 import numpy as np
-from tqdm import tqdm
-import functools
 from ordered_set import OrderedSet
+from tqdm import tqdm
 
 from lab_01 import walk_file
 
@@ -25,6 +25,9 @@ class DictionaryBuilder:
 
         self.inverted_index = []
         self.document_ids = dict(zip(self.filenames, range(self.filenames_count)))
+
+        self.build_incidence_matrix()
+        self.build_inverted_index()
 
     def build_incidence_matrix(self):
         for i in tqdm(range(self.words_count)):
@@ -53,13 +56,12 @@ class DictionaryBuilder:
                 return mid
         return -1
 
-    @classmethod
-    def boolean_search_by_incidence_matrix(self, query):
+    def boolean_search(self, query, token_cls):
         res = None
         method = None
         negate = False
         for word in query.split(' '):
-            token = QueryToken(word)
+            token = token_cls(word, self)
             separator = token.get_separator
             if separator:
                 if token.is_negate:
@@ -84,49 +86,10 @@ class DictionaryBuilder:
                     res = res + token
         return res
 
-class QueryToken:
-    and_separ = 'AND'
-    or_separ = 'OR'
-    not_separ = 'NOT'
-    separators = {
-        'AND': '__and__',
-        'OR': '__or__',
-        'NOT': '__invert__'
-    }
+    def boolean_search_incidence_matrix(self, query):
+        from lab_02.query_token import IncedenceMatrixQueryToken
+        return self.boolean_search(query, IncedenceMatrixQueryToken)
 
-    def __init__(self, word):
-        self.word = word
-
-    def __str__(self):
-        return self.word
-
-    def __repr__(self):
-        return self.word
-
-    @property
-    def get_separator(self):
-        return self.separators.get(self.word, False)
-
-    @property
-    def is_negate(self):
-        return self.word == self.not_separ
-
-    def __add__(self, other):
-        return QueryToken(f'{self.word} {other.word}')
-
-    def __or__(self, other):
-        kek = f'{self.word} or {other.word}'
-        print(kek)
-        return QueryToken(kek)
-
-    def __and__(self, other):
-        kek = f'{self.word} and {other.word}'
-        print(kek)
-        return QueryToken(kek)
-
-    def __invert__(self):
-        kek = f'not_{self.word[::-1]}'
-        return QueryToken(kek)
-
-
-
+    def boolean_search_inverted_index(self, query):
+        from lab_02.query_token import InvertedIndexQueryToken
+        return self.boolean_search(query, InvertedIndexQueryToken)
