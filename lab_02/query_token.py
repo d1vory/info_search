@@ -77,4 +77,28 @@ class IncedenceMatrixQueryToken(QueryToken):
         return IncedenceMatrixQueryToken(kek, self.data, representation=res)
 
 class InvertedIndexQueryToken(QueryToken):
-    pass
+    def get_representation(self) -> set:
+        if self.representation is None:
+            index = self.data.get_index_of_word(self.word)
+            self.representation = self.data.inverted_index[index]
+        return self.representation
+
+    def __and__(self, other):
+        a = self.get_representation()
+        b = other.get_representation()
+        kek = f'{self.word} and {other.word}'
+        res = a.intersection(b)
+        return IncedenceMatrixQueryToken(kek, self.data, representation=res)
+
+    def __or__(self, other):
+        a = self.get_representation()
+        b = other.get_representation()
+        kek = f'{self.word} or {other.word}'
+        res = a.union(b)
+        return IncedenceMatrixQueryToken(kek, self.data, representation=res)
+
+    def __invert__(self):
+        a = self.get_representation()
+        kek = f'not_{self.word[::-1]}'
+        res = {document_id for document_id in self.data.document_ids.values() if document_id not in a}
+        return IncedenceMatrixQueryToken(kek, self.data, representation=res)

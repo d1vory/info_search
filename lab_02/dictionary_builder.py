@@ -39,7 +39,7 @@ class DictionaryBuilder:
 
     def build_inverted_index(self):
         for word in tqdm(self.combined_dictionary):
-            occurences = [self.document_ids.get(filename) for filename in self.filenames if word in self.document_words[filename]]
+            occurences = {self.document_ids.get(filename) for filename in self.filenames if word in self.document_words[filename]}
             self.inverted_index.append(occurences)
 
 
@@ -84,11 +84,12 @@ class DictionaryBuilder:
                     res = token
                 else:
                     res = res + token
-        return res
+        return res.get_representation()
 
     def boolean_search_incidence_matrix(self, query):
         from lab_02.query_token import IncedenceMatrixQueryToken
-        return self.boolean_search(query, IncedenceMatrixQueryToken)
+        res = self.boolean_search(query, IncedenceMatrixQueryToken)
+        return [self.filenames[i] for i in range(self.filenames_count) if res[i] == 1]
 
     def boolean_search_inverted_index(self, query):
         from lab_02.query_token import InvertedIndexQueryToken
