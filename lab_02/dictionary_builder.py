@@ -93,4 +93,5 @@ class DictionaryBuilder:
 
     def boolean_search_inverted_index(self, query):
         from lab_02.query_token import InvertedIndexQueryToken
-        return self.boolean_search(query, InvertedIndexQueryToken)
+        res = self.boolean_search(query, InvertedIndexQueryToken)
+        return {self.filenames[i] for i in res}
