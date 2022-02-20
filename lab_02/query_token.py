@@ -1,6 +1,4 @@
-from functools import cached_property
-
-from lab_02.dictionary_builder import DictionaryBuilder
+from lab_04.permutation_index import WordToken
 
 
 class QueryToken:
@@ -49,6 +47,7 @@ class QueryToken:
         kek = f'not_{self.word[::-1]}'
         return QueryToken(kek, self.data)
 
+
 class IncedenceMatrixQueryToken(QueryToken):
 
     def get_representation(self):
@@ -76,6 +75,7 @@ class IncedenceMatrixQueryToken(QueryToken):
         res = ~self.get_representation() + 2
         return IncedenceMatrixQueryToken(kek, self.data, representation=res)
 
+
 class InvertedIndexQueryToken(QueryToken):
     def get_representation(self) -> set:
         if self.representation is None:
@@ -88,17 +88,27 @@ class InvertedIndexQueryToken(QueryToken):
         b = other.get_representation()
         kek = f'{self.word} and {other.word}'
         res = a.intersection(b)
-        return IncedenceMatrixQueryToken(kek, self.data, representation=res)
+        return self.__class__(kek, self.data, representation=res)
 
     def __or__(self, other):
         a = self.get_representation()
         b = other.get_representation()
         kek = f'{self.word} or {other.word}'
         res = a.union(b)
-        return IncedenceMatrixQueryToken(kek, self.data, representation=res)
+        return self.__class__(kek, self.data, representation=res)
 
     def __invert__(self):
         a = self.get_representation()
         kek = f'not_{self.word[::-1]}'
         res = {document_id for document_id in self.data.document_ids.values() if document_id not in a}
-        return IncedenceMatrixQueryToken(kek, self.data, representation=res)
+        return self.__class__(kek, self.data, representation=res)
+
+
+class PermutationIndexQueryToken(InvertedIndexQueryToken):
+    def get_representation(self) -> set:
+        if self.representation is None:
+            word = WordToken.transform_joker(self.word)
+            self.representation = set()
+            for _, word_token in self.data.inverted_index.iteritems(word):
+                self.representation = self.representation.union(word_token.occurrences)
+        return self.representation

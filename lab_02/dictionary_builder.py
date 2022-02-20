@@ -9,25 +9,33 @@ from lab_01 import walk_file
 
 
 class DictionaryBuilder:
-    def __init__(self):
+    def __init__(self, files_dir='files'):
         self.document_words = dict()
-        self.filenames = os.listdir('files')
+        self.filenames = []
+        self.combined_dictionary = {}
+        self.filenames_count = 0
+        self.words_count = 0
+        self.create_combined_dictionary(files_dir)
+
+        self.incidence_matrix = np.zeros(shape=(self.words_count, self.filenames_count), dtype=np.int8)
+        self.inverted_index = []
+        self.document_ids = dict(zip(self.filenames, range(self.filenames_count)))
+
+        self.build_incidence_matrix()
+        self.build_inverted_index()
+
+    def create_combined_dictionary(self, files_dir):
+        self.filenames = os.listdir(files_dir)
         for filename in tqdm(self.filenames):
             res = set()
-            self.document_words[filename] = walk_file(f'files/{filename}', res)
+            self.document_words[filename] = walk_file(f'{files_dir}/{filename}', res)
         print('Dict by document is done!')
 
         self.combined_dictionary = sorted(OrderedSet(functools.reduce(set.union, self.document_words.values())))
 
         self.filenames_count = len(self.filenames)
         self.words_count = len(self.combined_dictionary)
-        self.incidence_matrix = np.zeros(shape=(self.words_count, self.filenames_count), dtype=np.int8)
-
-        self.inverted_index = []
-        self.document_ids = dict(zip(self.filenames, range(self.filenames_count)))
-
-        self.build_incidence_matrix()
-        self.build_inverted_index()
+        return self.combined_dictionary
 
     def build_incidence_matrix(self):
         for i in tqdm(range(self.words_count)):
@@ -94,4 +102,4 @@ class DictionaryBuilder:
     def boolean_search_inverted_index(self, query):
         from lab_02.query_token import InvertedIndexQueryToken
         res = self.boolean_search(query, InvertedIndexQueryToken)
-        return {self.filenames[i] for i in res}
+        return [self.filenames[i] for i in res]
