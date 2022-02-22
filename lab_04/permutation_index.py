@@ -51,7 +51,7 @@ class PermutationIndex(DictionaryBuilder):
             occurences = {self.document_ids.get(filename) for filename in self.filenames if
                           word in self.document_words[filename]}
             for permutation in WordToken.build_permutations(word):
-                self.inverted_index[permutation] = WordToken(permutation, occurences)
+                self.inverted_index[permutation] = WordToken(word, occurences)
 
     def boolean_search_inverted_index(self, query):
         from lab_02.query_token import PermutationIndexQueryToken

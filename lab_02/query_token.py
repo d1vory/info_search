@@ -109,6 +109,10 @@ class PermutationIndexQueryToken(InvertedIndexQueryToken):
         if self.representation is None:
             word = WordToken.transform_joker(self.word)
             self.representation = set()
-            for _, word_token in self.data.inverted_index.iteritems(word):
-                self.representation = self.representation.union(word_token.occurrences)
+            try:
+                for _, word_token in self.data.inverted_index.iteritems(word):
+                    print('found word: ', word_token.word)
+                    self.representation = self.representation.union(word_token.occurrences)
+            except KeyError:
+                pass
         return self.representation
