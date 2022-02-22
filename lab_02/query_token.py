@@ -104,6 +104,13 @@ class InvertedIndexQueryToken(QueryToken):
         return self.__class__(kek, self.data, representation=res)
 
 
+class DictInvertedIndexQueryToken(InvertedIndexQueryToken):
+    def get_representation(self) -> set:
+        if self.representation is None:
+            self.representation = self.data.inverted_index.get(self.word, set())
+        return self.representation
+
+
 class PermutationIndexQueryToken(InvertedIndexQueryToken):
     def get_representation(self) -> set:
         if self.representation is None:
