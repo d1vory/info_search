@@ -89,3 +89,4 @@ def build_tree():
 
 
 tree = build_tree()
+tree.printTree(tree.root)

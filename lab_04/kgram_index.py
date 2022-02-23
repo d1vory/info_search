@@ -4,6 +4,8 @@ from tqdm import tqdm
 
 from lab_02.dictionary_builder import DictionaryBuilder
 
+def relu(x):
+    return max(0, x)
 
 class KGramIndex(DictionaryBuilder):
     @staticmethod
@@ -15,25 +17,23 @@ class KGramIndex(DictionaryBuilder):
     @staticmethod
     def transform_joker(word):
         #word = '$' + word + '$'
-        # word = '$' + word + '$'
-        # i = word.index('*')
-        # word[0:i]
-        # '$red'
-        # word[0:3]
-        # '$re'
-        # word[i + 1:i + 4]
-        # '$'
+        word = '$' + word + '$'
+        i = word.index('*')
+        fst = word[relu(i-3):i]
+        scnd = word[i + 1:i + 4]
+        return f'{fst} AND {scnd}'
 
 
-        word = word.lower()
-        word = re.sub("[*]+", "*", word)
-        if len(re.findall("[*]", word)) > 2:
-            return "Wrong request"
-        word = re.sub("[*]", "AND", word)
-        word = re.findall("[a-z]+|[AND]+", word)
-        return ' '.join(word)
+        # word = word.lower()
+        # word = re.sub("[*]+", "*", word)
+        # if len(re.findall("[*]", word)) > 2:
+        #     return "Wrong request"
+        # word = re.sub("[*]", "AND", word)
+        # word = re.findall("[a-z]+|[AND]+", word)
+        #return ' '.join(word)
 
     def __init__(self, files_dir='files', k=3):
+        self.k = k
         self.document_words = dict()
         self.filenames = []
         self.combined_dictionary = {}
@@ -57,6 +57,7 @@ class KGramIndex(DictionaryBuilder):
                     self.inverted_index[gram] = occurences
 
     def boolean_search_inverted_index(self, query):
-        from lab_02.query_token import PermutationIndexQueryToken
-        res = self.boolean_search(query, PermutationIndexQueryToken)
+        from lab_02.query_token import DictInvertedIndexQueryToken
+        query = ' '.join([self.transform_joker(word) if '*' in word else word for word in query.split()])
+        res = self.boolean_search(query, DictInvertedIndexQueryToken)
         return [self.filenames[i] for i in res]
